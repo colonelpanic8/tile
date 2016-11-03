@@ -1,2 +1,4 @@
 * About
-tile provides a way to interactively cycle through pre-defined custom layout definitions à la XMonad.
+tile provides a way to interactively cycle through pre-defined custom layout
+definitions à la XMonad. Inspiration was taken from [[https://github.com/lgfang/elisp/blob/master/tiling.el][here]], but this is pretty
+much a complete rewrite.
