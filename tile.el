@@ -146,7 +146,6 @@
 
 (defvar tile-current-strategy nil)
 (defvar tile-strategies (list tile-master-default (tile-split-n-tall 3) tile-wide tile-one))
-(defvar tile-strategies (list (tile-split-n-tall 3)))
 
 (cl-defun tile-get-next-strategy
     (&optional (current-strategy (or tile-current-strategy (car (last tile-strategies)))))
