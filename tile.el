@@ -191,7 +191,7 @@
        (defvar ,strategy-name ,initform)
        (defcustom ,custom-name ,enabled
          ,docstring
-         :type '(bool)
+         :type '(boolean)
          :group 'tile)
        (push (quote ,name) tile-customize-strategies))))
 
