@@ -114,7 +114,7 @@
     (tile-split-evenly other-fn (cdr buffers))))
 
 
-;; Default instances and convenience functions
+;; Default layouts and convenience functions
 
 (defvar tile-master-left
   (tile-master-layout
@@ -136,17 +136,6 @@
    :master-fn 'split-window-vertically
    :other-fn 'split-window-horizontally))
 
-(defvar tile-wide
-  (tile-argument-buffer-fetcher :layout 'tile-wide))
-
-(defvar tile-tall
-  (tile-argument-buffer-fetcher :layout 'tile-tall))
-
-(defvar tile-master-default
-  (tile-n-buffer-fetcher :n 4 :layout tile-master-left))
-
-(defvar tile-one (tile-argument-buffer-fetcher :layout 'identity))
-
 (defun tile-split-n-tall (n)
   (tile-n-buffer-fetcher :n n :layout 'tile-tall))
 
@@ -154,22 +143,105 @@
   (tile-n-buffer-fetcher :n n :layout 'tile-wide))
 
 
-;; Global variables and interactive functions
+;; Strategy cycler
 
-(defvar tile-current-strategy nil)
-(defvar tile-strategies
-  (list tile-master-default (tile-split-n-tall 3) tile-wide tile-one))
+(defclass tile-strategy-cycler ()
+  ((current-strategy :initform nil)))
 
-(cl-defun tile-get-next-strategy
-    (&optional (current-strategy (or tile-current-strategy
-                                     (car (last tile-strategies)))))
-  (let ((current-index (--find-index (equal current-strategy it) tile-strategies)))
+(cl-defmethod tile-get-next-strategy
+    ((cycler tile-strategy-cycler)
+     &optional (current-strategy (or (oref cycler current-strategy)
+                                     (car (last (tile-get-strategies cycler))))))
+  (let* ((strategies (tile-get-strategies cycler))
+         (current-index (--find-index (equal current-strategy it) strategies)))
     (if current-index
-        (nth (mod (1+ current-index) (length tile-strategies)) tile-strategies)
-      (car tile-strategies))))
+        (nth (mod (1+ current-index) (length strategies)) strategies)
+      (car strategies))))
+
+(defclass tile-strategies (tile-strategy-cycler)
+  ((strategies :initarg strategies)))
+
+(cl-defmethod tile-get-strategies ((cycler tile-strategies))
+  (oref cycler strategies))
+
+
+;; Customize support
+
+(defgroup tile ()
+  "Flimenu minor mode."
+  :group 'layout
+  :prefix "tile-")
+
+(eval-and-compile
+  (defun tile-maybe-symbol-name (arg)
+    (if (symbolp arg)
+        (symbol-name arg)
+      arg))
+
+  (defun tile-concat-symbols (&rest args)
+    (intern (mapconcat 'tile-maybe-symbol-name args ""))))
+
+(defvar tile-customize-strategies nil)
+
+(cl-defmacro tile-defstrategy (name initform &key (enabled t) docstring)
+  (let* ((strategy-name (tile-concat-symbols 'tile- name))
+         (custom-name (tile-concat-symbols 'tile-enable- name))
+         (docstring (or docstring (format "Enable the `%s' strategy"
+                                          strategy-name))))
+    `(progn
+       (defvar ,strategy-name ,initform)
+       (defcustom ,custom-name ,enabled
+         ,docstring
+         :type '(bool)
+         :group 'tile)
+       (push (quote ,name) tile-customize-strategies))))
+
+(put 'tile-defstrategy 'lisp-indent-function 1)
+
+(tile-defstrategy wide
+  (tile-argument-buffer-fetcher :layout 'tile-wide))
+
+(tile-defstrategy tall
+  (tile-argument-buffer-fetcher :layout 'tile-tall))
+
+(tile-defstrategy master-left-4
+  (tile-n-buffer-fetcher :n 4 :layout tile-master-left))
+
+(tile-defstrategy master-right-4
+  (tile-n-buffer-fetcher :n 4 :layout tile-master-right)
+  :enabled nil)
+
+(tile-defstrategy master-top-4
+  (tile-n-buffer-fetcher :n 4 :layout tile-master-top))
+
+(tile-defstrategy master-bottom-4
+  (tile-n-buffer-fetcher :n 4 :layout tile-master-bottom)
+  :enabled nil)
+
+(tile-defstrategy one
+  (tile-argument-buffer-fetcher :layout 'identity))
+
+(defclass tile-customize-strategy-cycler (tile-strategy-cycler) nil)
+
+(cl-defmethod tile-get-strategies ((_ tile-customize-strategy-cycler))
+  (cl-loop for name in tile-customize-strategies
+           for enabled = (symbol-value (tile-concat-symbols 'tile-enable- name))
+           for strategy-var = (tile-concat-symbols 'tile- name)
+           when enabled collect (symbol-value strategy-var)))
+
+(defcustom tile-cycler (tile-customize-strategy-cycler)
+  "The object that will be used to cycle through strategies.
+The customize variables that enabled and disable certain
+strategies will only work if this is set to and instance of
+`tile-customize-stragety-cycler'."
+  :options '((tile-customize-strategy-cycler))
+  :group 'tile)
+
+
+;; Interactive functions
 
 (cl-defun tile (&key (window-count (length (window-list nil -1 nil)))
-                     (strategy (tile-get-next-strategy)))
+                     (strategy (tile-get-next-strategy tile-cycler)))
   "Tile WINDOW-COUNT windows using STRATEGY.
 
 STRATEGY defaults to the return value
@@ -177,7 +249,7 @@ of `(tile-get-next-strategy)' and WINDOW-COUNT defaults to the
 current window count."
   (interactive)
   (tile-execute strategy window-count)
-  (setq tile-current-strategy strategy))
+  (oset tile-cycler current-strategy strategy))
 
 (provide 'tile)
 ;;; tile.el ends here
