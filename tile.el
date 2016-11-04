@@ -157,10 +157,12 @@
 ;; Global variables and interactive functions
 
 (defvar tile-current-strategy nil)
-(defvar tile-strategies (list tile-master-default (tile-split-n-tall 3) tile-wide tile-one))
+(defvar tile-strategies
+  (list tile-master-default (tile-split-n-tall 3) tile-wide tile-one))
 
 (cl-defun tile-get-next-strategy
-    (&optional (current-strategy (or tile-current-strategy (car (last tile-strategies)))))
+    (&optional (current-strategy (or tile-current-strategy
+                                     (car (last tile-strategies)))))
   (let ((current-index (--find-index (equal current-strategy it) tile-strategies)))
     (if current-index
         (nth (mod (1+ current-index) (length tile-strategies)) tile-strategies)
