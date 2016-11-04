@@ -203,18 +203,26 @@
 (tile-defstrategy tall
   (tile-argument-buffer-fetcher :layout 'tile-tall))
 
-(tile-defstrategy master-left-4
-  (tile-n-buffer-fetcher :n 4 :layout tile-master-left))
-
-(tile-defstrategy master-right-4
-  (tile-n-buffer-fetcher :n 4 :layout tile-master-right)
+(tile-defstrategy wide-3
+  (tile-n-buffer-fetcher :n 3 :layout 'tile-wide)
   :enabled nil)
 
-(tile-defstrategy master-top-4
-  (tile-n-buffer-fetcher :n 4 :layout tile-master-top))
+(tile-defstrategy tall-3
+  (tile-n-buffer-fetcher :n 3 :layout 'tile-tall)
+  :enabled nil)
 
-(tile-defstrategy master-bottom-4
-  (tile-n-buffer-fetcher :n 4 :layout tile-master-bottom)
+(tile-defstrategy master-left-3
+  (tile-n-buffer-fetcher :n 3 :layout tile-master-left))
+
+(tile-defstrategy master-right-3
+  (tile-n-buffer-fetcher :n 3 :layout tile-master-right)
+  :enabled nil)
+
+(tile-defstrategy master-top-3
+  (tile-n-buffer-fetcher :n 3 :layout tile-master-top))
+
+(tile-defstrategy master-bottom-3
+  (tile-n-buffer-fetcher :n 3 :layout tile-master-bottom)
   :enabled nil)
 
 (tile-defstrategy one
