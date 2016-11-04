@@ -108,35 +108,50 @@
 (cl-defmethod tile-do-layout ((strategy tile-master-layout) buffers)
   (set-window-buffer nil (car buffers))
   (with-slots (master-fn other-fn) strategy
+    ;; NOTE: Master function should execute a split, and put focus in the window
+    ;; that should be used for NON-MASTER tiling.
     (funcall master-fn)
-    (other-window 1)
     (tile-split-evenly other-fn (cdr buffers))))
 
 
 ;; Default instances and convenience functions
 
-(defvar tile-master-tall (make-instance 'tile-master-layout
-                                        :master-fn 'split-window-horizontally
-                                        :other-fn 'split-window-vertically))
+(defvar tile-master-left
+  (make-instance 'tile-master-layout
+                 :master-fn (lambda () (split-window-horizontally) (other-window 1))
+                 :other-fn 'split-window-vertically))
 
-(defvar tile-master-wide (make-instance 'tile-master-layout
-                                        :master-fn 'split-window-vertically
-                                        :other-fn 'split-window-horizontally))
+(defvar tile-master-right
+  (make-instance 'tile-master-layout
+                 :master-fn 'split-window-horizontally
+                 :other-fn 'split-window-vertically))
+
+(defvar tile-master-top
+  (make-instance 'tile-master-layout
+                 :master-fn (lambda () (split-window-vertically) (other-window 1))
+                 :other-fn 'split-window-horizontally))
+
+(defvar tile-master-bottom
+  (make-instance 'tile-master-layout
+                 :master-fn 'split-window-vertically
+                 :other-fn 'split-window-horizontally))
 
 (defvar tile-wide
   (make-instance 'tile-argument-buffer-fetcher :layout 'tile-wide))
+
 (defvar tile-tall
   (make-instance 'tile-argument-buffer-fetcher :layout 'tile-tall))
+
 (defvar tile-master-default
-  (make-instance 'tile-n-buffer-fetcher :n 4 :layout tile-master-tall))
+  (make-instance 'tile-n-buffer-fetcher :n 4 :layout tile-master-left))
+
+(defvar tile-one (make-instance 'tile-argument-buffer-fetcher :layout 'identity))
 
 (defun tile-split-n-tall (n)
   (make-instance 'tile-n-buffer-fetcher :n n :layout 'tile-tall))
 
 (defun tile-split-n-wide (n)
   (make-instance 'tile-n-buffer-fetcher :n n :layout 'tile-wide))
-
-(defvar tile-one (make-instance 'tile-argument-buffer-fetcher :layout 'identity))
 
 
 ;; Global variables and interactive functions
