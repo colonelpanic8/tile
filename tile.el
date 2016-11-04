@@ -186,8 +186,7 @@
 (cl-defmacro tile-defstrategy (name initform &key (enabled t) docstring)
   (let* ((strategy-name (tile-concat-symbols 'tile- name))
          (custom-name (tile-concat-symbols 'tile-enable- name))
-         (docstring (or docstring (format "Enable the `%s' strategy"
-                                          strategy-name))))
+         (docstring (or docstring (format "Enable the `%s' strategy." name))))
     `(progn
        (defvar ,strategy-name ,initform)
        (defcustom ,custom-name ,enabled
