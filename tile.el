@@ -190,7 +190,7 @@
            collect (cons (tile-get-name strategy) strategy)))
 
 (defclass tile-strategies (tile-strategy-cycler)
-  ((strategies :initarg strategies)))
+  ((strategies :initarg :strategies)))
 
 (cl-defmethod tile-get-strategies ((cycler tile-strategies))
   (oref cycler strategies))
