@@ -71,7 +71,8 @@
 ;; Buffer fetchers
 
 (defclass tile-buffer-fetcher nil
-  ((layout :initarg :layout)))
+  ((layout :initarg :layout)
+   (name :initarg :name :initform nil)))
 
 (cl-defmethod tile-execute ((strategy tile-buffer-fetcher) target-num-buffers)
   (let ((layout (oref strategy layout))
@@ -83,14 +84,40 @@
         (funcall layout buffers)
       (tile-do-layout layout buffers))))
 
+(defun tile-has-class (obj)
+  (condition-case _
+      (progn (eieio-object-class obj)
+             t)
+    ('error nil)))
+
+(cl-defmethod tile-get-name ((strategy tile-buffer-fetcher))
+  (with-slots (name layout) strategy
+      (or name
+          (replace-regexp-in-string
+           "tile-" ""
+           (format "%s-%s"
+                   (if (tile-has-class layout)
+                       (eieio-object-class layout)
+                     layout)
+                   (tile-fetcher-name strategy))))))
+
+(cl-defmethod tile-fetcher-name ((strategy tile-buffer-fetcher))
+  (symbol-name (eieio-object-class strategy)))
+
 (defclass tile-argument-buffer-fetcher (tile-buffer-fetcher) nil)
 
 (cl-defmethod tile-strategy-get-buffers
   ((_strategy tile-argument-buffer-fetcher) target-num-buffers)
   (tile-get-buffers target-num-buffers))
 
+(cl-defmethod tile-fetcher-name ((_ tile-argument-buffer-fetcher))
+  "args")
+
 (defclass tile-n-buffer-fetcher (tile-buffer-fetcher)
   ((n :initarg :n)))
+
+(cl-defmethod tile-fetcher-name ((strategy tile-n-buffer-fetcher))
+  (format "%s" (oref strategy n)))
 
 (cl-defmethod tile-strategy-get-buffers ((strategy tile-n-buffer-fetcher) _)
   (tile-get-buffers (oref strategy n)))
@@ -158,6 +185,10 @@
         (nth (mod (1+ current-index) (length strategies)) strategies)
       (car strategies))))
 
+(cl-defmethod tile-get-candidates ((cycler tile-strategy-cycler))
+  (cl-loop for strategy in (tile-get-strategies cycler)
+           collect (cons (tile-get-name strategy) strategy)))
+
 (defclass tile-strategies (tile-strategy-cycler)
   ((strategies :initarg strategies)))
 
@@ -183,10 +214,13 @@
 
 (defvar tile-customize-strategies nil)
 
-(cl-defmacro tile-defstrategy (name initform &key (enabled t) docstring)
+(cl-defmacro tile-defstrategy (name initform &key (enabled t) docstring inhibit-naming)
   (let* ((strategy-name (tile-concat-symbols 'tile- name))
          (custom-name (tile-concat-symbols 'tile-enable- name))
-         (docstring (or docstring (format "Enable the `%s' strategy." name))))
+         (docstring (or docstring (format "Enable the `%s' strategy." name)))
+         (initform (if (and (not inhibit-naming) (listp initform))
+                       (append initform (list :name (symbol-name name)))
+                     initform)))
     `(progn
        (defvar ,strategy-name ,initform)
        (defcustom ,custom-name ,enabled
@@ -247,6 +281,15 @@ strategies will only work if this is set to and instance of
 
 ;; Interactive functions
 
+;;;###autoload
+(defun tile-select ()
+  "Select a tile strategy by name."
+  (interactive)
+  (let ((candidates (tile-get-candidates tile-cycler)))
+    (tile :strategy (cdr (assoc (completing-read "Select a layout strategy: "
+                                                 candidates) candidates)))))
+
+;;;###autoload
 (cl-defun tile (&key (window-count (length (window-list nil -1 nil)))
                      (strategy (tile-get-next-strategy tile-cycler)))
   "Tile WINDOW-COUNT windows using STRATEGY.
