@@ -1,12 +1,12 @@
 ;;; tile.el --- Tile windows with layouts -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2015-2016 Ivan Malison
+;; Copyright (C) 2016 Ivan Malison
 
 ;; Author: Ivan Malison <IvanMalison@gmail.com>
 ;; Keywords: tile tiling window manager dynamic
 ;; URL: https://github.com/IvanMalison/tile
 ;; Package-Requires: ((emacs "25.1") (s "1.9.0") (dash "2.12.0") (stream "2.2.3"))
-;; Version: 0.1.4
+;; Version: 0.0.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
