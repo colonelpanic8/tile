@@ -168,7 +168,7 @@
 ;; Customize support
 
 (defgroup tile ()
-  "Flimenu minor mode."
+  "Tile windows à la XMonad."
   :group 'layout
   :prefix "tile-")
 
