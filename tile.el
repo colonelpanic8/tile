@@ -291,7 +291,8 @@ strategies will only work if this is set to and instance of
 
 ;;;###autoload
 (cl-defun tile (&key (window-count (length (window-list nil -1 nil)))
-                     (strategy (tile-get-next-strategy tile-cycler)))
+                     (cycler tile-cycler)
+                     (strategy (tile-get-next-strategy cycler)))
   "Tile WINDOW-COUNT windows using STRATEGY.
 
 STRATEGY defaults to the return value
@@ -299,7 +300,7 @@ of `(tile-get-next-strategy)' and WINDOW-COUNT defaults to the
 current window count."
   (interactive)
   (tile-execute strategy window-count)
-  (oset tile-cycler current-strategy strategy))
+  (oset cycler current-strategy strategy))
 
 (provide 'tile)
 ;;; tile.el ends here
