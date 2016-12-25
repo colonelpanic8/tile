@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 Ivan Malison
 
 ;; Author: Ivan Malison <IvanMalison@gmail.com>
-;; Keywords: tile tiling window manager dynamic
+;; Keywords: tile tiling window manager dynamic frames
 ;; URL: https://github.com/IvanMalison/tile
 ;; Package-Requires: ((emacs "25.1") (s "1.9.0") (dash "2.12.0") (stream "2.2.3"))
 ;; Version: 0.0.0
